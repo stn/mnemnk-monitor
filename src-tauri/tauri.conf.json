@@ -34,12 +34,13 @@
   },
   "plugins": {
     "cli": {
-      "description": "Tauri CLI Plugin Example",
+      "description": "Mnemnk Monitor",
       "args": [
         {
-          "short": "v",
-          "name": "verbose",
-          "description": "Verbosity level"
+          "name": "config",
+          "short": "c",
+          "takesValue": true,
+          "description": "JSON config string"
         }
       ]
     }
