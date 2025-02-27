@@ -1,7 +1,10 @@
 use anyhow::Result;
 use schemars::{schema_for, JsonSchema};
 use serde_json::Value;
-use std::io::{stdin, BufRead, BufReader};
+use std::{
+    io::{stdin, BufRead, BufReader},
+    time::SystemTime,
+};
 
 const AGENT_NAME: &str = "mnemnk-monitor";
 
@@ -50,11 +53,15 @@ impl MonitorAgent {
     }
 
     pub fn run(self) -> Result<()> {
+        log::info!("Starting {}.", AGENT_NAME);
+
         let schema = schema_for!(AgentConfig);
         println!("CONFIG_SCHEMA {}", serde_json::to_string(&schema)?);
         println!("CONFIG {}", serde_json::to_string(&self.config)?);
 
-        log::info!("Starting {}.", AGENT_NAME);
+        for channel in &self.config.monitor_channels {
+            println!("SUBSCRIBE {}", channel);
+        }
 
         tauri::async_runtime::spawn(async move {
             let mut reader = BufReader::new(stdin());
@@ -78,8 +85,14 @@ impl MonitorAgent {
     async fn process_line(&self, line: &str) -> Result<()> {
         log::debug!("process_line: {}", line);
 
-        if let Some((cmd, _args)) = parse_line(line) {
+        if let Some((cmd, args)) = parse_line(line) {
             match cmd {
+                "PUBLISH" => {
+                    log::info!("PUBLISH {}.", args);
+                    let time = SystemTime::now();
+                    let args = parse_publish(args);
+                    log::info!("PUBLISH {} {} {} {:?}.", args[0], args[1], args[2], time);
+                }
                 "QUIT" => {
                     log::info!("QUIT {}.", AGENT_NAME);
                     std::process::exit(0);
@@ -108,4 +121,8 @@ fn parse_line(line: &str) -> Option<(&str, &str)> {
     } else {
         Some((line, ""))
     }
+}
+
+fn parse_publish(args: &str) -> Vec<&str> {
+    args.splitn(3, ' ').collect()
 }
