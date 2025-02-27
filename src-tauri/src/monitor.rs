@@ -1,7 +1,7 @@
 use anyhow::Result;
 use schemars::{schema_for, JsonSchema};
 use serde_json::Value;
-use tokio::io::{stdin, AsyncBufReadExt, BufReader};
+use std::io::{stdin, BufRead, BufReader};
 
 const AGENT_NAME: &str = "mnemnk-monitor";
 
@@ -62,7 +62,10 @@ impl MonitorAgent {
 
             // Main loop with graceful shutdown
             loop {
-                reader.read_line(&mut line).await.unwrap();
+                let num = reader.read_line(&mut line).unwrap();
+                if num == 0 {
+                    break;
+                }
                 if let Err(e) = self.process_line(&line).await {
                     log::error!("Failed to process line: {}", e);
                 }
