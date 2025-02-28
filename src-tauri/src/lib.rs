@@ -30,7 +30,9 @@ pub fn run() {
                     println!("No matches");
                 }
             }
-            MonitorAgent::new(config).run().unwrap();
+            MonitorAgent::new(app.handle().clone(), config)
+                .run()
+                .unwrap();
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())

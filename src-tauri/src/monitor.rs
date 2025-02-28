@@ -1,14 +1,17 @@
 use anyhow::Result;
 use schemars::{schema_for, JsonSchema};
+use serde::Serialize;
 use serde_json::Value;
 use std::{
     io::{stdin, BufRead, BufReader},
     time::SystemTime,
 };
+use tauri::{AppHandle, Emitter};
 
 const AGENT_NAME: &str = "mnemnk-monitor";
+const EMIT_PUBLISH: &str = "mnemnk-publish";
 
-/// # Monitor
+/// # Mnemnk Monitor
 /// Monitor channels
 #[derive(Debug, serde::Deserialize, serde::Serialize, JsonSchema)]
 pub struct AgentConfig {
@@ -42,12 +45,14 @@ impl From<&str> for AgentConfig {
 }
 
 pub struct MonitorAgent {
+    app_hanlder: AppHandle,
     config: AgentConfig,
 }
 
 impl MonitorAgent {
-    pub fn new(config: Option<String>) -> Self {
+    pub fn new(app_handle: AppHandle, config: Option<String>) -> Self {
         Self {
+            app_hanlder: app_handle,
             config: config.map_or_else(AgentConfig::default, |s| s.as_str().into()),
         }
     }
@@ -89,9 +94,11 @@ impl MonitorAgent {
             match cmd {
                 "PUBLISH" => {
                     log::info!("PUBLISH {}.", args);
-                    let time = SystemTime::now();
-                    let args = parse_publish(args);
-                    log::info!("PUBLISH {} {} {} {:?}.", args[0], args[1], args[2], time);
+                    let event = parse_publish(args);
+                    if let Some(event) = event {
+                        log::info!("PUBLISH {:?}", event);
+                        self.app_hanlder.emit(EMIT_PUBLISH, event)?;
+                    }
                 }
                 "QUIT" => {
                     log::info!("QUIT {}.", AGENT_NAME);
@@ -123,6 +130,26 @@ fn parse_line(line: &str) -> Option<(&str, &str)> {
     }
 }
 
-fn parse_publish(args: &str) -> Vec<&str> {
-    args.splitn(3, ' ').collect()
+#[derive(Debug, Clone, Serialize)]
+struct PublishEvent {
+    agent: String,
+    channel: String,
+    value: Value,
+    time: u128,
+}
+
+fn parse_publish(args: &str) -> Option<PublishEvent> {
+    let args: Vec<&str> = args.splitn(3, ' ').collect();
+    if args.len() != 3 {
+        return None;
+    }
+    Some(PublishEvent {
+        agent: args[0].to_string(),
+        channel: args[1].to_string(),
+        value: serde_json::from_str(args[2]).unwrap_or(Value::Null),
+        time: SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis(),
+    })
 }
