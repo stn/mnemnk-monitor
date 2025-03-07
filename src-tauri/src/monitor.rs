@@ -61,11 +61,11 @@ impl MonitorAgent {
         log::info!("Starting {}.", AGENT_NAME);
 
         let schema = schema_for!(AgentConfig);
-        println!("CONFIG_SCHEMA {}", serde_json::to_string(&schema)?);
-        println!("CONFIG {}", serde_json::to_string(&self.config)?);
+        println!(".CONFIG_SCHEMA {}", serde_json::to_string(&schema)?);
+        println!(".CONFIG {}", serde_json::to_string(&self.config)?);
 
         for channel in &self.config.monitor_channels {
-            println!("SUBSCRIBE {}", channel);
+            println!(".SUBSCRIBE {}", channel);
         }
 
         tauri::async_runtime::spawn(async move {
@@ -92,15 +92,15 @@ impl MonitorAgent {
 
         if let Some((cmd, args)) = parse_line(line) {
             match cmd {
-                "PUBLISH" => {
-                    log::info!("PUBLISH {}.", args);
+                ".PUBLISH" => {
+                    log::debug!("PUBLISH {}.", args);
                     let event = parse_publish(args);
                     if let Some(event) = event {
-                        log::info!("PUBLISH {:?}", event);
+                        log::debug!("PUBLISH {:?}", event);
                         self.app_hanlder.emit(EMIT_PUBLISH, event)?;
                     }
                 }
-                "QUIT" => {
+                ".QUIT" => {
                     log::info!("QUIT {}.", AGENT_NAME);
                     std::process::exit(0);
                 }
