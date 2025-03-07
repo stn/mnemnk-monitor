@@ -12,7 +12,15 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(if cfg!(debug_assertions) {
+                    log::LevelFilter::Debug
+                } else {
+                    log::LevelFilter::Info
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_cli::init())
         .setup(|app| {
             let mut config = None;
@@ -21,14 +29,11 @@ pub fn run() {
                 // `args` is `HashMap<String, ArgData>` where `ArgData` is a struct with { value, occurrences }.
                 // `subcommand` is `Option<Box<SubcommandMatches>>` where `SubcommandMatches` is a struct with { name, matches }.
                 Ok(matches) => {
-                    println!("{:?}", matches);
                     if let Some(config_arg) = matches.args.get("config") {
                         config = config_arg.value.as_str().map(|s| s.to_string());
                     }
                 }
-                Err(_) => {
-                    println!("No matches");
-                }
+                Err(_) => {}
             }
             MonitorAgent::new(app.handle().clone(), config)
                 .run()

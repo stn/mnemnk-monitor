@@ -88,12 +88,12 @@ impl MonitorAgent {
     }
 
     async fn process_line(&self, line: &str) -> Result<()> {
-        log::debug!("process_line: {}", line);
+        // log::debug!("process_line: {}", line);
 
         if let Some((cmd, args)) = parse_line(line) {
             match cmd {
                 ".PUBLISH" => {
-                    log::debug!("PUBLISH {}.", args);
+                    // log::debug!("PUBLISH {}.", args);
                     let event = parse_publish(args);
                     if let Some(event) = event {
                         log::debug!("PUBLISH {:?}", event);
@@ -101,7 +101,7 @@ impl MonitorAgent {
                     }
                 }
                 ".QUIT" => {
-                    log::info!("QUIT {}.", AGENT_NAME);
+                    log::info!("Quit {}.", AGENT_NAME);
                     std::process::exit(0);
                 }
                 _ => {
