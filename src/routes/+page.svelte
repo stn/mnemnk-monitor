@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Card } from 'flowbite-svelte';
+    import { Input } from 'flowbite-svelte';
     import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
     type PublishEvent = {
@@ -39,20 +39,25 @@
     }
 </script>
 
-<main class="container m-4" bind:clientHeight={height}>
-  <div class="grid grid-column grid-cols-12 gap-4">
-    {#each events as event}
-      <div class=""></div>
-      <div class="col-span-10 border border-gray-200 p-4 rounded-lg drop-shadow-sm">
-        <div class="drop-shadow-none">
-          <h3>
-            <span class="mr-4 mb-2">{formatTime(event.time)}</span>
-            <span class="font-bold">{event.channel} ({event.agent})</span>
-          </h3>
+<div class="container flex flex-col min-h-[100vh] max-w-full p-4">
+  <div class="flex-grow">
+    <div class="grid grid-column grid-cols-12 gap-4" bind:clientHeight={height}>
+      {#each events as event}
+        <div class="col-start-2 col-span-10 border border-gray-200 p-4 rounded-lg drop-shadow-sm">
+          <div class="drop-shadow-none">
+            <h3>
+              <span class="mr-4 mb-2">{formatTime(event.time)}</span>
+              <span class="font-bold">{event.channel} ({event.agent})</span>
+            </h3>
+          </div>
+          <p>{JSON.stringify(event.value, null, 2)}</p>
         </div>
-        <p>{JSON.stringify(event.value, null, 2)}</p>
-      </div>
-      <div class=""></div>
-    {/each}
+      {/each}
+    </div>
   </div>
-</main>
+  <div class="mt-4 mb-2">
+    <div class="grid grid-column grid-cols-12 gap-4" >
+      <Input class="col-start-2 col-span-10" placeholder="Type a message..." />
+    </div>
+  </div>
+</div>
