@@ -25,7 +25,7 @@ pub struct AgentConfig {
 impl Default for AgentConfig {
     fn default() -> Self {
         Self {
-            monitor_channels: vec!["application".into(), "browser".into()],
+            monitor_channels: vec!["application".into(), "browser".into(), "voice".into()],
             message_channel: "user_message".into(),
         }
     }
