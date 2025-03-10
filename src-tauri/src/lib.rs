@@ -15,6 +15,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_cli::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let mut config = None;
             match app.cli().matches() {
@@ -32,7 +33,6 @@ pub fn run() {
             monitor::run(app.handle())?;
             Ok(())
         })
-        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![monitor::send_message])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
