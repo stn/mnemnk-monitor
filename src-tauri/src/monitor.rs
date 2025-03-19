@@ -1,52 +1,22 @@
 use anyhow::Result;
-use schemars::{schema_for, JsonSchema};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     io::{stdin, BufRead, BufReader},
     sync::Mutex,
     time::SystemTime,
 };
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager};
 
 const AGENT_NAME: &str = "mnemnk-monitor";
-const EMIT_PUBLISH: &str = "mnemnk-publish";
+const EMIT_INPUT: &str = "mnemnk-input";
 
-/// # Mnemnk Monitor
-/// Monitor channels
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, JsonSchema)]
-pub struct AgentConfig {
-    /// # Subscribe Channels
-    monitor_channels: Vec<String>,
-    /// # Message channel
-    message_channel: String,
-}
-
-impl Default for AgentConfig {
-    fn default() -> Self {
-        Self {
-            monitor_channels: vec!["application".into(), "browser".into(), "voice".into()],
-            message_channel: "user_message".into(),
-        }
-    }
-}
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AgentConfig {}
 
 impl From<&str> for AgentConfig {
-    fn from(s: &str) -> Self {
-        let mut config = AgentConfig::default();
-        if let Value::Object(c) = serde_json::from_str(s).unwrap_or(Value::Null) {
-            if let Some(channels) = c.get("monitor_channels") {
-                config.monitor_channels = channels
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .map(|v| v.as_str().unwrap().to_string())
-                    .collect();
-            }
-            if let Some(message_channel) = c.get("message_channel") {
-                config.message_channel = message_channel.as_str().unwrap().to_string();
-            }
-        }
+    fn from(_s: &str) -> Self {
+        let config = AgentConfig::default();
         config
     }
 }
@@ -58,19 +28,6 @@ pub fn init(app_handle: &AppHandle, config: Option<String>) {
 
 pub fn run(app_handle: &AppHandle) -> Result<()> {
     log::info!("Starting {}.", AGENT_NAME);
-
-    let schema = schema_for!(AgentConfig);
-    println!(".CONFIG_SCHEMA {}", serde_json::to_string(&schema)?);
-
-    let config = app_handle.state::<Mutex<AgentConfig>>();
-    {
-        let config = config.lock().unwrap().clone();
-        println!(".CONFIG {}", serde_json::to_string(&config)?);
-
-        for channel in &config.monitor_channels {
-            println!(".SUBSCRIBE {}", channel);
-        }
-    }
 
     let app_handle = app_handle.clone();
     tauri::async_runtime::spawn(async move {
@@ -97,12 +54,16 @@ async fn process_line(app_handle: &AppHandle, line: &str) -> Result<()> {
 
     if let Some((cmd, args)) = parse_line(line) {
         match cmd {
-            ".PUBLISH" => {
-                // log::debug!("PUBLISH {}.", args);
-                let event = parse_publish(args);
+            ".CONFIG" => {
+                // log::debug!("CONFIG {}.", args);
+                let config: AgentConfig = args.into();
+                app_handle.manage(Mutex::new(config));
+            }
+            ".IN" => {
+                // log::debug!("IN {}.", args);
+                let event = parse_input(args);
                 if let Some(event) = event {
-                    log::debug!("PUBLISH {:?}", event);
-                    app_handle.emit(EMIT_PUBLISH, event)?;
+                    app_handle.emit(EMIT_INPUT, event)?;
                 }
             }
             ".QUIT" => {
@@ -135,19 +96,19 @@ fn parse_line(line: &str) -> Option<(&str, &str)> {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct PublishEvent {
+struct InputEvent {
     agent: String,
     channel: String,
     value: Value,
     time: u128,
 }
 
-fn parse_publish(args: &str) -> Option<PublishEvent> {
+fn parse_input(args: &str) -> Option<InputEvent> {
     let args: Vec<&str> = args.splitn(3, ' ').collect();
     if args.len() != 3 {
         return None;
     }
-    Some(PublishEvent {
+    Some(InputEvent {
         agent: args[0].to_string(),
         channel: args[1].to_string(),
         value: serde_json::from_str(args[2]).unwrap_or(Value::Null),
@@ -164,21 +125,11 @@ struct UserMessage {
 }
 
 #[tauri::command]
-pub fn send_message(message: String, config: State<Mutex<AgentConfig>>) -> Result<(), String> {
-    let message_channel;
-    {
-        let config = config.lock().unwrap().clone();
-        message_channel = config.message_channel;
-    }
-
-    if message_channel.is_empty() {
-        return Err("Message channel is empty.".to_string());
-    }
-
+pub fn send_message(message: String) -> Result<(), String> {
     let user_message = UserMessage { message };
     println!(
-        ".WRITE {} {}",
-        message_channel,
+        ".OUT {} {}",
+        "user_message",
         serde_json::to_string(&user_message).unwrap()
     );
 

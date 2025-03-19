@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { Button, DarkMode, Input, Navbar, NavBrand, NavHamburger } from "flowbite-svelte";
+    import { Button, DarkMode, Input } from "flowbite-svelte";
     import { ArrowDownOutline, ArrowUpDownOutline } from "flowbite-svelte-icons";
     import { listen, type UnlistenFn } from "@tauri-apps/api/event";
     import { invoke } from "@tauri-apps/api/core";
 
-    type PublishEvent = {
+    type InputEvent = {
       agent: string;
       channel: string;
       value: any;
@@ -12,7 +12,7 @@
     };
 
     let unlisten: UnlistenFn | null = null;
-    let events = $state<PublishEvent[]>([]);
+    let events = $state<InputEvent[]>([]);
     let height = $state(0);
     let message = $state("");
     let keepScrolled = $state(true);
@@ -20,7 +20,7 @@
     const MAX_EVENTS = 100;
 
     $effect(() => {
-      listen<PublishEvent>("mnemnk-publish", (event) => {
+      listen<InputEvent>("mnemnk-input", (event) => {
         events.push(event.payload);
         if (events.length > MAX_EVENTS) {
           events = events.slice(events.length - MAX_EVENTS);

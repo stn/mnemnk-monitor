@@ -1,0 +1,8 @@
+{
+    "name": "mnemnk-monitor",
+    "title": "Monitor",
+    "description": "monitor boards",
+    "inputs": ["*"],
+    "outputs": ["user_message"],
+    "default_config": {}
+} 
