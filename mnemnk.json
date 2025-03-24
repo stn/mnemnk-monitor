@@ -1,8 +1,16 @@
 {
-    "name": "mnemnk-monitor",
-    "title": "Monitor",
-    "description": "monitor boards",
-    "inputs": ["*"],
-    "outputs": ["user_message"],
-    "default_config": {}
-} 
+    "agents": [
+        {
+            "kind": "Command",
+            "name": "mnemnk-monitor",
+            "title": "Monitor",
+            "description": "monitor boards",
+            "command": {
+                "cmd": "./src-tauri/target/release/mnemnk-monitor"
+            },
+            "inputs": ["*"],
+            "outputs": ["user"],
+            "default_config": {}
+        } 
+    ]
+}
