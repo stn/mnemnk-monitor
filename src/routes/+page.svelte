@@ -5,8 +5,7 @@
     import { invoke } from "@tauri-apps/api/core";
 
     type InputEvent = {
-      agent: string;
-      channel: string;
+      kind: string;
       value: any;
       time: number;
     };
@@ -47,8 +46,7 @@
     async function onsubmit(event: Event) {
       event.preventDefault();
       events.push({
-        agent: "mnemnk-monitor",
-        channel: "user_message",
+        kind: "user_message",
         value: { "message": message}, 
         time: Date.now(),
       });
@@ -81,7 +79,7 @@
         <div class="text-gray-700 dark:text-gray-300 drop-shadow-none">
           <h3>
             <span class="mr-4 mb-2">{formatTime(event.time)}</span>
-            <span class="font-bold">{event.channel} ({event.agent})</span>
+            <span class="font-bold">{event.kind}</span>
           </h3>
         </div>
         <p>{JSON.stringify(event.value, null, 2)}</p>

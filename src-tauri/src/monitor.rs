@@ -97,21 +97,19 @@ fn parse_line(line: &str) -> Option<(&str, &str)> {
 
 #[derive(Debug, Clone, Serialize)]
 struct InputEvent {
-    agent: String,
-    channel: String,
+    kind: String,
     value: Value,
     time: u128,
 }
 
 fn parse_input(args: &str) -> Option<InputEvent> {
-    let args: Vec<&str> = args.splitn(3, ' ').collect();
-    if args.len() != 3 {
+    let args: Vec<&str> = args.splitn(2, ' ').collect();
+    if args.len() != 2 {
         return None;
     }
     Some(InputEvent {
-        agent: args[0].to_string(),
-        channel: args[1].to_string(),
-        value: serde_json::from_str(args[2]).unwrap_or(Value::Null),
+        kind: args[0].to_string(),
+        value: serde_json::from_str(args[1]).unwrap_or(Value::Null),
         time: SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
