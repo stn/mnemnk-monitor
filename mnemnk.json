@@ -9,8 +9,7 @@
                 "cmd": "./src-tauri/target/release/mnemnk-monitor"
             },
             "inputs": ["*"],
-            "outputs": ["user"],
-            "default_config": {}
+            "outputs": ["user"]
         } 
     ]
 }
