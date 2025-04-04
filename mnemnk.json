@@ -5,6 +5,7 @@
             "name": "mnemnk-monitor",
             "title": "Monitor",
             "description": "monitor boards",
+            "category": "Utility",
             "command": {
                 "cmd": "./src-tauri/target/release/mnemnk-monitor"
             },
