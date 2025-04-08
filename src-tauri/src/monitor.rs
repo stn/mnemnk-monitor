@@ -97,19 +97,21 @@ fn parse_line(line: &str) -> Option<(&str, &str)> {
 
 #[derive(Debug, Clone, Serialize)]
 struct InputEvent {
+    ch: String,
     kind: String,
     value: Value,
     time: u128,
 }
 
 fn parse_input(args: &str) -> Option<InputEvent> {
-    let args: Vec<&str> = args.splitn(2, ' ').collect();
-    if args.len() != 2 {
+    let args: Vec<&str> = args.splitn(3, ' ').collect();
+    if args.len() != 3 {
         return None;
     }
     Some(InputEvent {
-        kind: args[0].to_string(),
-        value: serde_json::from_str(args[1]).unwrap_or(Value::Null),
+        ch: args[0].to_string(),
+        kind: args[1].to_string(),
+        value: serde_json::from_str(args[2]).unwrap_or(Value::Null),
         time: SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -126,8 +128,9 @@ struct UserMessage {
 pub fn send_message(message: String) -> Result<(), String> {
     let user_message = UserMessage { message };
     println!(
-        ".OUT {} {}",
-        "user_message",
+        ".OUT {} {} {}",
+        "user",
+        "message",
         serde_json::to_string(&user_message).unwrap()
     );
 
